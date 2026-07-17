@@ -21,13 +21,13 @@
       --primary: #0b57d0;
       --background: #f4f7fb;
       --surface: #ffffff;
-      --border: #d8e0eb;
+      --border: #d9e1ec;
       --text: #172033;
       --muted: #657086;
-      --danger: #b3261e;
-      --danger-bg: #fce8e6;
       --success: #137333;
       --success-bg: #e6f4ea;
+      --danger: #b3261e;
+      --danger-bg: #fce8e6;
       --info: #174ea6;
       --info-bg: #e8f0fe;
     }
@@ -39,10 +39,7 @@
     body {
       margin: 0;
       min-height: 100vh;
-      padding:
-        calc(18px + env(safe-area-inset-top))
-        16px
-        calc(18px + env(safe-area-inset-bottom));
+      padding-bottom: 26px;
       color: var(--text);
       background: var(--background);
       font-family:
@@ -52,28 +49,135 @@
         sans-serif;
     }
 
-    .app {
-      width: min(100%, 680px);
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      padding:
+        calc(16px + env(safe-area-inset-top))
+        18px
+        16px;
+      color: white;
+      background:
+        linear-gradient(135deg, #0b57d0, #4b7bec);
+    }
+
+    .topbar-inner,
+    .content {
+      width: min(100%, 720px);
       margin: 0 auto;
     }
 
-    h1 {
-      margin: 0 0 6px;
-      font-size: 27px;
+    .topbar h1 {
+      margin: 0;
+      font-size: 23px;
+    }
+
+    .content {
+      padding: 16px;
+    }
+
+    .card {
+      margin-bottom: 14px;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+      box-shadow: 0 8px 24px rgba(30, 50, 80, 0.08);
+    }
+
+    .stack {
+      display: grid;
+      gap: 11px;
     }
 
     .subtitle {
-      margin: 0 0 16px;
+      margin: 0;
       color: var(--muted);
       line-height: 1.5;
     }
 
-    .card {
-      padding: 18px;
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      background: var(--surface);
-      box-shadow: 0 10px 30px rgba(30, 50, 80, 0.10);
+    .message {
+      display: none;
+      margin-bottom: 14px;
+      padding: 13px 14px;
+      border-radius: 14px;
+      font-weight: 650;
+    }
+
+    .message.show {
+      display: block;
+    }
+
+    .message.info {
+      color: var(--info);
+      background: var(--info-bg);
+    }
+
+    .message.success {
+      color: var(--success);
+      background: var(--success-bg);
+    }
+
+    .message.error {
+      color: var(--danger);
+      background: var(--danger-bg);
+    }
+
+    label,
+    .label {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    input,
+    button {
+      width: 100%;
+      min-height: 52px;
+      padding: 13px 15px;
+      border-radius: 14px;
+      font: inherit;
+    }
+
+    input {
+      border: 1px solid #c9d2df;
+      background: white;
+    }
+
+    button {
+      border: 0;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .primary {
+      color: white;
+      background: var(--primary);
+    }
+
+    .secondary {
+      color: var(--primary);
+      background: #e8f0fe;
+    }
+
+    .ghost {
+      color: var(--muted);
+      background: #eef2f7;
+    }
+
+    .danger {
+      color: var(--danger);
+      background: var(--danger-bg);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
     }
 
     .scanner-frame {
@@ -106,90 +210,32 @@
       pointer-events: none;
     }
 
-    button,
-    input {
-      width: 100%;
-      min-height: 52px;
-      margin-top: 10px;
-      padding: 13px 15px;
-      border-radius: 14px;
-      font: inherit;
-    }
-
-    button {
-      border: 0;
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    input {
-      border: 1px solid #c9d2df;
-      background: white;
-    }
-
-    .primary {
-      color: white;
-      background: var(--primary);
-    }
-
-    .secondary {
-      color: var(--primary);
-      background: #e8f0fe;
-    }
-
-    .danger {
-      color: var(--danger);
-      background: var(--danger-bg);
-    }
-
-    .message {
-      display: none;
-      margin-bottom: 14px;
-      padding: 13px 14px;
-      border-radius: 14px;
-      font-weight: 650;
-    }
-
-    .message.show {
-      display: block;
-    }
-
-    .message.info {
-      color: var(--info);
-      background: var(--info-bg);
-    }
-
-    .message.success {
-      color: var(--success);
-      background: var(--success-bg);
-    }
-
-    .message.error {
-      color: var(--danger);
-      background: var(--danger-bg);
-    }
-
-    .manual {
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border);
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
     }
 
     .hidden {
       display: none !important;
     }
+
+    @media (max-width: 520px) {
+      .button-row {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 
 <body>
-  <main class="app">
-    <h1>Inventory Scanner</h1>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <h1>Inventory QR Scanner</h1>
+    </div>
+  </header>
 
-    <p class="subtitle">
-      Scan one of your existing QR codes containing
-      <strong>location,room</strong>.
-    </p>
-
+  <main class="content">
     <div
       id="message"
       class="message"
@@ -197,7 +243,12 @@
       aria-live="polite">
     </div>
 
-    <section class="card">
+    <section class="card stack">
+      <p class="subtitle">
+        Scan an existing QR code containing
+        <strong>location,room</strong>.
+      </p>
+
       <div class="scanner-frame">
         <video
           id="scanner-video"
@@ -208,42 +259,61 @@
         <div class="scan-guide"></div>
       </div>
 
-      <button
-        id="start-button"
-        type="button"
-        class="primary">
-        Start Scanner
-      </button>
-
-      <button
-        id="stop-button"
-        type="button"
-        class="danger hidden">
-        Stop Scanner
-      </button>
-
-      <div class="manual">
-        <input
-          id="manual-value"
-          type="text"
-          placeholder="Example: B-3,Cargo Hold 3"
-        >
+      <div class="button-row">
+        <button
+          id="start-button"
+          type="button"
+          class="primary">
+          Start Scanner
+        </button>
 
         <button
-          id="manual-button"
+          id="stop-button"
           type="button"
-          class="secondary">
-          Continue Manually
+          class="danger hidden">
+          Stop Scanner
         </button>
       </div>
+    </section>
+
+    <section class="card stack">
+      <span class="label">Enter location manually</span>
+
+      <label for="manual-location">Location</label>
+
+      <input
+        id="manual-location"
+        type="text"
+        placeholder="B-3"
+      >
+
+      <label for="manual-room">Room</label>
+
+      <input
+        id="manual-room"
+        type="text"
+        placeholder="Cargo Hold 3"
+      >
+
+      <button
+        id="manual-button"
+        type="button"
+        class="secondary">
+        Load Location
+      </button>
+    </section>
+
+    <section class="card">
+      <button
+        id="back-button"
+        type="button"
+        class="ghost">
+        Back to Inventory
+      </button>
     </section>
   </main>
 
   <script>
-    /*
-     * REQUIRED:
-     * Replace this with your deployed Apps Script /exec URL.
-     */
     const APPS_SCRIPT_URL =
       "https://script.google.com/a/macros/co.bot/s/AKfycbxBBbA3FAW17-4fWox0TmnOpzkk3ksWJa2RJume2Jwk/dev";
 
@@ -255,6 +325,12 @@
 
     const stopButton =
       document.getElementById("stop-button");
+
+    const manualButton =
+      document.getElementById("manual-button");
+
+    const backButton =
+      document.getElementById("back-button");
 
     let scannerControls = null;
     let redirecting = false;
@@ -294,21 +370,18 @@
     }
 
 
-    function openInventoryApp(rawText) {
+    function openInventoryLocation(location, room) {
       if (redirecting) {
         return;
       }
-
-      const parsed =
-        parseLocationQr(rawText);
 
       redirecting = true;
 
       showMessage(
         "Location found: " +
-        parsed.location +
+        location +
         ", " +
-        parsed.room,
+        room,
         "success"
       );
 
@@ -319,16 +392,27 @@
 
       destination.searchParams.set(
         "location",
-        parsed.location
+        location
       );
 
       destination.searchParams.set(
         "room",
-        parsed.room
+        room
       );
 
       window.location.assign(
         destination.toString()
+      );
+    }
+
+
+    function openInventoryApp(rawText) {
+      const parsed =
+        parseLocationQr(rawText);
+
+      openInventoryLocation(
+        parsed.location,
+        parsed.room
       );
     }
 
@@ -362,7 +446,9 @@
             .listVideoInputDevices();
 
         if (!devices.length) {
-          throw new Error("No camera was found.");
+          throw new Error(
+            "No camera was found."
+          );
         }
 
         const rearCamera =
@@ -463,6 +549,43 @@
     }
 
 
+    function useManualLocation() {
+      const location =
+        document
+          .getElementById("manual-location")
+          .value
+          .trim();
+
+      const room =
+        document
+          .getElementById("manual-room")
+          .value
+          .trim();
+
+      if (!location || !room) {
+        showMessage(
+          "Enter both location and room.",
+          "error"
+        );
+
+        return;
+      }
+
+      redirecting = false;
+
+      openInventoryLocation(
+        location,
+        room
+      );
+    }
+
+
+    function returnToInventory() {
+      stopScanner();
+      window.location.assign(APPS_SCRIPT_URL);
+    }
+
+
     startButton.addEventListener(
       "click",
       startScanner
@@ -473,27 +596,15 @@
       stopScanner
     );
 
-    document
-      .getElementById("manual-button")
-      .addEventListener(
-        "click",
-        function () {
-          const value =
-            document
-              .getElementById("manual-value")
-              .value
-              .trim();
+    manualButton.addEventListener(
+      "click",
+      useManualLocation
+    );
 
-          try {
-            openInventoryApp(value);
-          } catch (error) {
-            showMessage(
-              error.message,
-              "error"
-            );
-          }
-        }
-      );
+    backButton.addEventListener(
+      "click",
+      returnToInventory
+    );
 
     window.addEventListener(
       "pagehide",
