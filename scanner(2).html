@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  >
+
+  <meta name="theme-color" content="#0b57d0">
+
+  <title>Inventory QR Scanner</title>
+
+  <script
+    src="https://unpkg.com/@zxing/browser@0.2.0/umd/zxing-browser.min.js">
+  </script>
+
+  <style>
+    :root {
+      --primary: #0b57d0;
+      --background: #f4f7fb;
+      --surface: #ffffff;
+      --border: #d8e0eb;
+      --text: #172033;
+      --muted: #657086;
+      --danger: #b3261e;
+      --danger-bg: #fce8e6;
+      --success: #137333;
+      --success-bg: #e6f4ea;
+      --info: #174ea6;
+      --info-bg: #e8f0fe;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding:
+        calc(18px + env(safe-area-inset-top))
+        16px
+        calc(18px + env(safe-area-inset-bottom));
+      color: var(--text);
+      background: var(--background);
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    }
+
+    .app {
+      width: min(100%, 680px);
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 27px;
+    }
+
+    .subtitle {
+      margin: 0 0 16px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .card {
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: var(--surface);
+      box-shadow: 0 10px 30px rgba(30, 50, 80, 0.10);
+    }
+
+    .scanner-frame {
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      min-height: 320px;
+      border-radius: 16px;
+      background: #10131a;
+    }
+
+    video {
+      display: block;
+      width: 100%;
+      min-height: 320px;
+      object-fit: cover;
+    }
+
+    .scan-guide {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: min(65vw, 260px);
+      aspect-ratio: 1;
+      transform: translate(-50%, -50%);
+      border: 4px solid white;
+      border-radius: 20px;
+      box-shadow:
+        0 0 0 9999px rgba(0, 0, 0, 0.28);
+      pointer-events: none;
+    }
+
+    button,
+    input {
+      width: 100%;
+      min-height: 52px;
+      margin-top: 10px;
+      padding: 13px 15px;
+      border-radius: 14px;
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    input {
+      border: 1px solid #c9d2df;
+      background: white;
+    }
+
+    .primary {
+      color: white;
+      background: var(--primary);
+    }
+
+    .secondary {
+      color: var(--primary);
+      background: #e8f0fe;
+    }
+
+    .danger {
+      color: var(--danger);
+      background: var(--danger-bg);
+    }
+
+    .message {
+      display: none;
+      margin-bottom: 14px;
+      padding: 13px 14px;
+      border-radius: 14px;
+      font-weight: 650;
+    }
+
+    .message.show {
+      display: block;
+    }
+
+    .message.info {
+      color: var(--info);
+      background: var(--info-bg);
+    }
+
+    .message.success {
+      color: var(--success);
+      background: var(--success-bg);
+    }
+
+    .message.error {
+      color: var(--danger);
+      background: var(--danger-bg);
+    }
+
+    .manual {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+    <h1>Inventory Scanner</h1>
+
+    <p class="subtitle">
+      Scan one of your existing QR codes containing
+      <strong>location,room</strong>.
+    </p>
+
+    <div
+      id="message"
+      class="message"
+      role="alert"
+      aria-live="polite">
+    </div>
+
+    <section class="card">
+      <div class="scanner-frame">
+        <video
+          id="scanner-video"
+          muted
+          playsinline>
+        </video>
+
+        <div class="scan-guide"></div>
+      </div>
+
+      <button
+        id="start-button"
+        type="button"
+        class="primary">
+        Start Scanner
+      </button>
+
+      <button
+        id="stop-button"
+        type="button"
+        class="danger hidden">
+        Stop Scanner
+      </button>
+
+      <div class="manual">
+        <input
+          id="manual-value"
+          type="text"
+          placeholder="Example: Warehouse A,Room 101"
+        >
+
+        <button
+          id="manual-button"
+          type="button"
+          class="secondary">
+          Continue Manually
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    /*
+     * REQUIRED:
+     * Replace this with your deployed Apps Script /exec URL.
+     */
+    const APPS_SCRIPT_URL =
+      "https://script.google.com/a/macros/co.bot/s/AKfycbwdf5ezR5RmL_ag6JqrEHtgMJekvCaXahGxum1b0RpdSO8kd4waOrFBk1fK_US2We_nFQ/exec";
+
+    const videoElement =
+      document.getElementById("scanner-video");
+
+    const startButton =
+      document.getElementById("start-button");
+
+    const stopButton =
+      document.getElementById("stop-button");
+
+    let scannerControls = null;
+    let redirecting = false;
+
+
+    function showMessage(text, type) {
+      const message =
+        document.getElementById("message");
+
+      message.textContent = text;
+      message.className =
+        "message show " + (type || "info");
+    }
+
+
+    function parseLocationQr(rawText) {
+      const pieces = String(rawText)
+        .split(",")
+        .map(function (value) {
+          return value.trim();
+        });
+
+      if (
+        pieces.length < 2 ||
+        !pieces[0] ||
+        !pieces[1]
+      ) {
+        throw new Error(
+          "Expected QR text in this format: location,room"
+        );
+      }
+
+      return {
+        location: pieces[0],
+        room: pieces.slice(1).join(",")
+      };
+    }
+
+
+    function openInventoryApp(rawText) {
+      if (redirecting) {
+        return;
+      }
+
+      const parsed =
+        parseLocationQr(rawText);
+
+      redirecting = true;
+
+      showMessage(
+        "Location found: " +
+        parsed.location +
+        ", " +
+        parsed.room,
+        "success"
+      );
+
+      stopScanner();
+
+      const destination =
+        new URL(APPS_SCRIPT_URL);
+
+      destination.searchParams.set(
+        "location",
+        parsed.location
+      );
+
+      destination.searchParams.set(
+        "room",
+        parsed.room
+      );
+
+      window.location.assign(
+        destination.toString()
+      );
+    }
+
+
+    async function startScanner() {
+      redirecting = false;
+      startButton.disabled = true;
+
+      try {
+        if (
+          !window.isSecureContext ||
+          !navigator.mediaDevices ||
+          !navigator.mediaDevices.getUserMedia
+        ) {
+          throw new Error(
+            "Open this page through HTTPS in Safari or Chrome."
+          );
+        }
+
+        if (
+          !window.ZXingBrowser ||
+          !ZXingBrowser.BrowserQRCodeReader
+        ) {
+          throw new Error(
+            "The QR scanner library did not load."
+          );
+        }
+
+        const devices =
+          await ZXingBrowser.BrowserCodeReader
+            .listVideoInputDevices();
+
+        if (!devices.length) {
+          throw new Error("No camera was found.");
+        }
+
+        const rearCamera =
+          devices.find(function (device) {
+            const label =
+              String(device.label || "")
+                .toLowerCase();
+
+            return (
+              label.includes("back") ||
+              label.includes("rear") ||
+              label.includes("environment")
+            );
+          });
+
+        const selectedDeviceId =
+          rearCamera
+            ? rearCamera.deviceId
+            : devices[devices.length - 1].deviceId;
+
+        const codeReader =
+          new ZXingBrowser.BrowserQRCodeReader();
+
+        scannerControls =
+          await codeReader.decodeFromVideoDevice(
+            selectedDeviceId,
+            videoElement,
+            function (result, error) {
+              if (result) {
+                try {
+                  openInventoryApp(
+                    result.getText()
+                  );
+                } catch (parseError) {
+                  showMessage(
+                    parseError.message,
+                    "error"
+                  );
+                }
+              }
+
+              if (
+                error &&
+                error.name !== "NotFoundException"
+              ) {
+                console.warn(error);
+              }
+            }
+          );
+
+        startButton.classList.add("hidden");
+        stopButton.classList.remove("hidden");
+
+        showMessage(
+          "Scanner active. Place the QR code inside the square.",
+          "info"
+        );
+      } catch (error) {
+        showMessage(
+          error && error.message
+            ? error.message
+            : String(error),
+          "error"
+        );
+
+        startButton.disabled = false;
+      }
+    }
+
+
+    function stopScanner() {
+      if (scannerControls) {
+        try {
+          scannerControls.stop();
+        } catch (error) {
+          console.warn(error);
+        }
+      }
+
+      scannerControls = null;
+
+      const stream =
+        videoElement.srcObject;
+
+      if (stream) {
+        stream
+          .getTracks()
+          .forEach(function (track) {
+            track.stop();
+          });
+
+        videoElement.srcObject = null;
+      }
+
+      startButton.disabled = false;
+      startButton.classList.remove("hidden");
+      stopButton.classList.add("hidden");
+    }
+
+
+    startButton.addEventListener(
+      "click",
+      startScanner
+    );
+
+    stopButton.addEventListener(
+      "click",
+      stopScanner
+    );
+
+    document
+      .getElementById("manual-button")
+      .addEventListener(
+        "click",
+        function () {
+          const value =
+            document
+              .getElementById("manual-value")
+              .value
+              .trim();
+
+          try {
+            openInventoryApp(value);
+          } catch (error) {
+            showMessage(
+              error.message,
+              "error"
+            );
+          }
+        }
+      );
+
+    window.addEventListener(
+      "pagehide",
+      stopScanner
+    );
+  </script>
+</body>
+</html>
